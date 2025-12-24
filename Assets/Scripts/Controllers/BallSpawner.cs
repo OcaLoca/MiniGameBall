@@ -1,3 +1,4 @@
+// BallSpawner.cs
 using UnityEngine;
 using System.Collections;
 
@@ -8,69 +9,63 @@ public class BallSpawner : MonoBehaviour
 
     [Header("Spawning Settings")]
     [SerializeField] private float spawnInterval = 2.0f;
-
-    // RIMOSSA: [SerializeField] private float spawnDistanceX = 5.0f; // Non serve più
+    [SerializeField] private float initialDelayMax = 1.0f; // NUOVO: Ritardo massimo casuale all'inizio
 
     [Header("Launch Settings")]
-    [SerializeField] private float launchForce = 500f;
+    [SerializeField] private float minLaunchForce = 400f;
+    [SerializeField] private float maxLaunchForce = 600f;
+    [SerializeField] private float maxAngleDeviation = 5.0f;
 
     private Vector3 spawnPoint;
 
-    void Start()
+
+    void Awake()
     {
-        // La posizione dello Spawner è il punto di spawn fisso
         spawnPoint = transform.position;
-
-        StartCoroutine(SpawnBallsRoutine());
     }
 
-    /// <summary>
-    /// Coroutine che genera una pallina ogni 'spawnInterval' secondi.
-    /// </summary>
-    IEnumerator SpawnBallsRoutine()
-    {
-        while (true)
-        {
-            SpawnNewBall();
-            yield return new WaitForSeconds(spawnInterval);
-        }
-    }
+    // RIMOSSI StartSpawning() e SpawnBallsRoutine()
 
     /// <summary>
-    /// Logica per istanziare una singola pallina nel punto esatto dello Spawner.
+    /// Metodo pubblico che esegue un SINGOLO lancio della pallina.
+    /// Viene chiamato dal Manager.
     /// </summary>
-    void SpawnNewBall()
+    public void LaunchBall()
     {
-        // 1. Istanzia il Prefab nel punto di spawn fisso
-        // RIMOSSO: il calcolo di randomPosition.
+        // ... (Logica di SpawnNewBall spostata qui) ...
+
         GameObject newBall = Instantiate(ballPrefab, spawnPoint, Quaternion.identity);
 
-        // 2. Ottieni e applica la forza
         Rigidbody ballRb = newBall.GetComponent<Rigidbody>();
 
         if (ballRb != null)
         {
-            // La direzione "avanti" dell'oggetto spawner è data da transform.forward
-            Vector3 launchDirection = transform.forward;
+            float randomLaunchForce = Random.Range(minLaunchForce, maxLaunchForce);
 
-            // Applica la forza nella direzione dello Spawner
-            ballRb.AddForce(launchDirection * launchForce, ForceMode.Impulse);
+            Vector3 baseLaunchDirection = transform.forward;
+
+            float horizontalAngle = Random.Range(-maxAngleDeviation, maxAngleDeviation);
+            float verticalAngle = Random.Range(-maxAngleDeviation, maxAngleDeviation);
+
+            Quaternion randomHorizontalRotation = Quaternion.AngleAxis(horizontalAngle, transform.up);
+            Quaternion randomVerticalRotation = Quaternion.AngleAxis(verticalAngle, transform.right);
+
+            Vector3 finalLaunchDirection = randomHorizontalRotation * randomVerticalRotation * baseLaunchDirection;
+
+            ballRb.AddForce(finalLaunchDirection * randomLaunchForce, ForceMode.Impulse);
         }
         else
         {
             Debug.LogError("Il Prefab della pallina non ha un componente Rigidbody! Non è possibile applicare la spinta.");
         }
     }
-
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-
-        // Disegna un cubo per mostrare il punto esatto di spawn
         Gizmos.DrawWireCube(transform.position, Vector3.one * 0.5f);
 
-        // Disegna una linea per mostrare la direzione di lancio
         Gizmos.color = Color.yellow;
+        // La linea gialla mostra solo la direzione base (senza deviazione)
         Gizmos.DrawRay(transform.position, transform.forward * 2);
     }
 }

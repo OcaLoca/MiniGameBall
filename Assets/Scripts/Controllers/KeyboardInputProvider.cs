@@ -9,6 +9,7 @@ public class KeyboardInputProvider : IInputProvider, InputSystemActions.IPlayerA
     // Variabile per memorizzare il valore Vector2 letto dall'azione "Move"
     private Vector2 moveVector = Vector2.zero;
     private bool isSprinting = false;
+    private bool useAttack = false;
 
     // Riferimento al tuo Input Action Asset generato
     private InputSystemActions controls;
@@ -35,6 +36,14 @@ public class KeyboardInputProvider : IInputProvider, InputSystemActions.IPlayerA
         // Questo sostituisce Input.GetAxis("Horizontal")
         return moveVector.x;
     }
+    public bool IsSprintActive()
+    {
+        return isSprinting;
+    }
+    public bool OnAttack()
+    {
+        return useAttack;
+    }
 
     // ---------------------------------------------------------------------
     // Implementazione dei Callback IPlayerActions (chiamati dal Nuovo Input System)
@@ -47,15 +56,15 @@ public class KeyboardInputProvider : IInputProvider, InputSystemActions.IPlayerA
         moveVector = context.ReadValue<Vector2>();
     }
 
-    public bool IsSprintActive()
-    {
-        return isSprinting;
-    }
 
     // Devi implementare anche tutti gli altri metodi dell'interfaccia IPlayerActions,
     // anche se li lasci vuoti.
     public void OnLook(InputAction.CallbackContext context) { }
-    public void OnAttack(InputAction.CallbackContext context) { }
+    public void OnAttack(InputAction.CallbackContext context) 
+    { 
+        useAttack = context.performed;
+    }
+
     public void OnInteract(InputAction.CallbackContext context) { }
     public void OnCrouch(InputAction.CallbackContext context) { }
     public void OnJump(InputAction.CallbackContext context) { }
@@ -74,4 +83,5 @@ public class KeyboardInputProvider : IInputProvider, InputSystemActions.IPlayerA
         controls.Dispose();
     }
 
+   
 }
